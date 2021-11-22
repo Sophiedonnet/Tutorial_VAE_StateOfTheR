@@ -1,0 +1,136 @@
+---
+title: "A gentle introduction to the Variational Auto Encoder"
+author: "J. Aubert and S. Donnet for StateOfTheR"
+date: "Dec. 2021"
+output: 
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# About the auto-encoders
+
+Auto-encoders are used for the reduction of dimension of (large) datasets. 
+
+<br> 
+- Let $X$ be our dataset: $X=(x_i)_{i \in 1, \dots,N_{obs}}$
+
+- $\forall i =1,\dots,N_{obs}$, $x_i \in \mathbb{R}^n$.  
+
+- Looking for two functions 
+
+  - **Encoder** $e :\mathbb{R}^n \mapsto \mathbb{R}^m$   and  
+
+  - **Decoder** $d :\mathbb{R}^m \mapsto \mathbb{R}^n$
+  
+  -  such that $$x \approx d(e(x))$$ 
+
+---
+
+# Autoencoder 
+
+```{r, echo=FALSE, out.width="90%", fig.cap="Autoencoder scheme.",fig.align="center"}
+knitr::include_graphics("images/Autoencoder.png")
+```
+
+---
+
+# About  $d$ and $e$ : neural networks
+
+<br>
+
+One neuron :     $f_j (\mathbf{x}) = \phi (<w_j, \mathbf {x}> + b_j)$   where
+
+
+<br>
+
+  - $\phi$ : activation function : non linear
+  
+  - The quantities $w_j = (w_j^1, \dots, w_j^n)$ are the weights of
+    the input variables $(x^1, \dots, x^n)$
+
+  -   $b_j$ is the bias of neuron $j$.
+
+---
+
+# About  $d$ and $e$ : neural networks
+
+
+Let $J_{\ell}$ be the number of neurons in layer $\ell$
+
+-   Layer $0$ : $h^0(\mathbf{x}) = \mathbf{x} \in \mathbb{R}^p$
+- 
+  For hidden layers $\ell = 1\dots L$:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    We create $J_{\ell}$ neurons : for every $j = 1 \dots J_{\ell}$
+    :
+  \end{itemize}
+
+  \begin{eqnarray*}
+        a^{(\ell)}_j(\mathbf{x}) &=& b^{(\ell)}_j + \sum_{m=1}^{J_{\ell-1}} W^{(\ell)}_{jm} h_m^{(\ell-1)}(\mathbf{x}) \\
+        &=& b^{(\ell)}_j + < W^{(\ell)}_{j},  h ^{(\ell-1)}(\mathbf{x}) >
+        \end{eqnarray*}
+
+\begin{verbatim}
+  $$h_j^{(\ell)}(\mathbf{x}) = \phi(a_j^{(\ell)}(\mathbf{x}))$$
+\end{verbatim}
+\item
+  With vectors and matrices :
+  \[a^{(\ell)}(\mathbf{x}) = b^{(\ell)} +W^{(\ell)} h^{(\ell-1)}(\mathbf{x}) \in \mathbb{R}^{J_{\ell}}\]
+  \[h^{(\ell)}(\mathbf{x}) = \phi(a^{(\ell)}(\mathbf{x}))\] where
+  $W^{(\ell)}$ is matrix of size $J_{\ell} \times J_{\ell-1}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Neural network: formally}
+\protect\hypertarget{neural-network-formally-1}{}
+
+\begin{itemize}
+\tightlist
+\item
+  For the last layer $\ell = L+1$:
+\end{itemize}
+
+\[a^{(L+1)}(\mathbf{x}) = b^{(L+1)} +W^{(L+1)} h^{(L)}(\mathbf{x}) \in \mathbb{R}^J\]
+\[h^{(L+1)}(\mathbf{x}) = \psi(a^{(L+1)}(\mathbf{x}))\]
+
+\end{frame}
+
+\begin{frame}{Neural network: finally}
+\protect\hypertarget{neural-network-finally}{}
+
+\begin{itemize}
+\tightlist
+\item
+  $W^{(\ell)}$ is a weight matrix with $J_{\ell}$ rows and
+  $J_{\ell-1}$ columns.\\
+\item
+  $W^{(L+1)}$ is a weight matrix with $1$ row and $J_{L}$ colums
+  $y \in \mathbb{R}$
+\item
+  \[\mathbf{x} \mapsto f(\mathbf{x},\theta) = \psi(a^{(L+1)}(\mathbf{x}))\]
+  - If we are in a regression context $\psi(z) = z$,\\
+  - If we are in a binary classification context $\psi$ is the sigmoid
+  function (prediction in $[0,1]$).\\
+  - If we are in a multiclass classification framework :
+  $\psi = softmax$
+\end{itemize}
+
+\end{frame}
+
+
+
+
