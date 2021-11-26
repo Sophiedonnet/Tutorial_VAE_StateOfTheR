@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>A gentle introduction to the Variational Auto Encoder</title>
+    <title>A gentle introduction to the Variational Neural Networks</title>
     <meta charset="utf-8" />
     <meta name="author" content="J. Aubert and S. Donnet for StateOfTheR" />
-    <script src="slides_VAE_files/header-attrs-2.9/header-attrs.js"></script>
     <link href="slides_VAE_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="slides_VAE_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="slides_VAE_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -13,7 +12,7 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# A gentle introduction to the Variational Auto Encoder
+# A gentle introduction to the Variational Neural Networks
 ### J. Aubert and S. Donnet for StateOfTheR
 ### Dec. 2021
 
@@ -22,8 +21,37 @@ class: center, middle, inverse, title-slide
 
 
 
+# Regression or classification
 
-# About the auto-encoders
+
+&lt;br&gt; 
+- Let `\((\mathbf{X},\mathbf{Y})\)` be our dataset: 
+      - `\((\mathbf{X},\mathbf{Y})=(X_i, Y_i)_{i \in 1, \dots,N_{obs}}\)`
+      - `\(\forall i =1,\dots,N_{obs}\)`, **Variables** `\(X_i \in \mathbb{R}^n\)`.  
+      - `\(Y_i \in \mathcal{Y}\)` the variable to explain : **classification** or **regression** 
+
+- Looking for a function `\(f\)`
+
+  - **classifier** or **regression**  `\(f :\mathbb{R}^n \mapsto \mathcal{Y}\)`   and  
+
+  -  such that $$Y \approx f(X) \Leftrightarrow \mbox{Loss}(Y -   f(X)) \mbox{ small } $$ 
+  
+      - If regression `\(\mbox{Loss}(Y -   f(X))  = ||Y -   f(X)) ||^2\)` 
+      
+      - If classification : Loss = cross-entropy 
+---
+
+# Regression or classification
+
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="images/RegressionClassification.png" alt="Regression or classification" width="90%" /&gt;
+&lt;p class="caption"&gt;Regression or classification&lt;/p&gt;
+&lt;/div&gt;
+
+---
+
+# Reduction of dimension
 
 Auto-encoders are used for the reduction of dimension of (large) datasets. 
 
@@ -39,6 +67,8 @@ Auto-encoders are used for the reduction of dimension of (large) datasets.
   - **Decoder** `\(d :\mathbb{R}^m \mapsto \mathbb{R}^n\)`
   
   -  such that $$X \approx d(e(X)) \Leftrightarrow ||X -   d(e(X)) ||^2 \mbox{ small } $$ 
+  
+  - `\(Z = e(X)\)` : **latent variable**
 
 ---
 
@@ -50,9 +80,21 @@ Auto-encoders are used for the reduction of dimension of (large) datasets.
 &lt;/div&gt;
 
 
+
 ---
 
-# About  `\(d\)` and `\(e\)` : neural networks
+
+# About `\(f\)`, `\(d\)` and `\(e\)` : neural networks
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="images/NeuralNetwork.png" alt="Neural network architecture." width="90%" /&gt;
+&lt;p class="caption"&gt;Neural network architecture.&lt;/p&gt;
+&lt;/div&gt;
+
+
+---
+
+# About `\(f\)`, `\(d\)` and `\(e\)` : neural networks
 
 &lt;div class="figure" style="text-align: center"&gt;
 &lt;img src="images/Autoencoder2.png" alt="Autoencoder scheme." width="90%" /&gt;
@@ -61,9 +103,10 @@ Auto-encoders are used for the reduction of dimension of (large) datasets.
 
 
 
+
 ---
 
-# About  `\(d\)` and `\(e\)` : neural networks
+# About   neural networks
 
  
 
@@ -94,15 +137,46 @@ Auto-encoders are used for the reduction of dimension of (large) datasets.
   - `\(b^\ell_j \in \mathbb{R}\)`, for `\(\ell =1, \dots L\)`, for `\(j=1,\dots,n_{\ell}\)`,
 
 
+
 ---
 
-# Learning `\(d\)` and `\(e\)` 
+# Model choice
 
-The parameters `\(\theta = (w^\ell_j,b^\ell_j)_{j = 1\dots,n_\ell, \ell = 1,\dots,L}\)` are calibrated on a dataset `\((x_i)_{i=1, \dots , N_{obs}}\)` by minimizing the loss function
+**To choose**: 
+    
+  - The number of layers `\(L\)`
+  
+  - The  number of neurons in each layer: `\(n_\ell\)` : 
+      - possibly `\(n_\ell &gt; n\)`
+      - For autoencoder the middle layer `\(m &lt; n\)`
+  
+  - The activation function `\(\phi\)`
+    
 
-`$$\widehat{\theta} = \mbox{argmin}_{\theta \in\Theta}  \sum_{i=1}^{N_{obs}}||X_i - d_{\theta}\circ e_{\theta}(X_i)||^2$$` 
 
-**Stochastic gradient descent**
+
+
+---
+
+# Learning `\(f,d\)` and `\(e\)` 
+
+
+&lt;br&gt;
+
+  - **Regression  or classification**
+  
+  The parameters `\(\theta = (w^\ell_j,b^\ell_j)_{j = 1\dots,n_\ell, \ell = 1,\dots,L}\)` are calibrated on a dataset `\((X_i,Y_i)_{i=1, \dots , N_{obs}}\)` by minimizing the loss function
+  
+  `$$\widehat{\theta} = \mbox{argmin}_{\theta \in\Theta}  \sum_{i=1}^{N_{obs}}\mbox{Loss}(Y_i - f_{\theta}(X_i))$$`
+    
+  - **Autoencoder** 
+  
+   The parameters `\(\theta = (w^\ell_j,b^\ell_j)_{j = 1\dots,n_\ell, \ell = 1,\dots,L}\)` are calibrated on a dataset `\((X_i)_{i=1, \dots , N_{obs}}\)` by minimizing the loss function
+  
+  `$$\widehat{\theta} = \mbox{argmin}_{\theta \in\Theta}  \sum_{i=1}^{N_{obs}}||X_i - d_{\theta}\circ e_{\theta}(X_i)||^2$$` 
+
+
+**Optimisation by Stochastic gradient descent**: see later for a reminder of the principle
 
 
 ---
@@ -110,7 +184,11 @@ The parameters `\(\theta = (w^\ell_j,b^\ell_j)_{j = 1\dots,n_\ell, \ell = 1,\dot
 # PCA versus autoencoder
 
 
-- Let `\(W \in M_{n,m}(\mathbb{R})\)`, `\(W = (C_1,\dots,C_m)\)` `\(m\)` columns vectors `\(C_i\)`, `\(m &lt; n\)`. **Hyp.**:  `\((C_i)\)` are orthonormal vectors. Consequently:
+- Let `\(W \in M_{n,m}(\mathbb{R})\)`, `\(W = (C_1,\dots,C_m)\)` 
+
+- The  `\(C_i\)`'s are `\(m\)` columns vectors, `\(m &lt; n\)`. 
+
+- **Hyp.**:  `\((C_i)\)` are orthonormal vectors. Consequently:
   `$$W'W = I_n$$`
   
   
@@ -136,6 +214,30 @@ $$
 
 [Lien vers une démonstration propre](http://www.xavierdupre.fr/app/mlstatpy/helpsphinx/c_ml/rn/rn_9_auto.html)
 
+
+---
+
+# Why  variational neural networks?
+
+  -  **Regression-Classification** : Bayesian inference of the parameters `\(\theta\)`
+      
+      - Prior on `\(\theta\)`: `\(\pi(\theta)\)`
+      
+      - Estimation not of `\(\theta\)` but of the posterior distribution of `\(\theta\)` : `\(p(\theta | \mathbf{Y})\)`
+      
+  - **Autoencoder**: give a structure on the latent space `\(\mathbf{Z}\)`
+      
+      - Prior on `\(Z\)`: `\(\pi(Z)\)`
+      
+      - Estimation of `\(\theta\)` and of  the posterior distribution of `\(Z\)` : `\(p(Z | \theta,  \mathbf{X})\)`
+
+  - **Variational** : approximation of the distributions 
+      
+      -  `\(p(\theta | \mathbf{Y}) \approx q_\mathbf{Y}(\theta)\)`
+      
+      -  `\(p(Z | \theta,  \mathbf{X}) \approx q_\mathbf{X}(Z)\)`
+          
+  
 
 ---
 
@@ -253,12 +355,7 @@ can not be evaluated.
 So people simulate latent variable
 
 `$$\mathbb{E}_{q_{\mathbf{X}}(\mathbf{Z};g,h)}  \left[\sum_{i=1}^N - \frac{||X_i - f(Z_i)||^2}{2c}\right] \approx  \left[\sum_{i=1}^N - \frac{||X_i - f(g(X_i) + diag(h(X_i))\xi_i)||^2}{2c}\right]$$`
-where `\(\xi_i\sim \mathcal{N}_m(0,\mathbb{I}_m)\)`  
-    
-
-
-   
-   
+where `\(\xi_i\sim \mathcal{N}_m(0,\mathbb{I}_m)\)`
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
