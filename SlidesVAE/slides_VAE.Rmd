@@ -15,6 +15,44 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
+
+# Context 
+
+- In statistical learning, two main tasks: 
+  - **Regression or classification**
+  - **Reduction of dimension**
+  
+- Neural networks are used to construct the regression function, classifier  or encoder-decoder (**autoencoder**). 
+
+- ** Variational versions **  are used when we do not want to optimize a parameter but a **probability distribution**
+  - if one wants to structure  the latent space
+  - if one wants to perform Bayesien inference
+
+- Relies on
+  - **Neural networks** : we know already
+  - **Variational EM algorithm**: we know already, but anyway it is not complicated
+  
+
+---
+# Organisation  of the talk
+
+
+1. **Regression and classification, reduction of dimension**
+
+2. **Neural networks**
+
+3. **Variational neural networks**
+
+4. **A few reminder on the optimization procedure**
+
+
+---
+class: center, middle
+
+1. **Regression and classification, reduction of dimension**
+
+---
+
 # Regression or classification
 
 
@@ -30,9 +68,9 @@ knitr::opts_chunk$set(echo = FALSE)
 
   -  such that $$Y \approx f(X) \Leftrightarrow \mbox{Loss}(Y -   f(X)) \mbox{ small } $$ 
   
-      - If regression $\mbox{Loss}(Y -   f(X))  = ||Y -   f(X)) ||^2$ 
+      - If **regression** $\mbox{Loss}(Y -   f(X))  = ||Y -   f(X)) ||^2$ 
       
-      - If classification : Loss = cross-entropy 
+      - If **classification** : Loss = cross-entropy 
 ---
 
 # Regression or classification
@@ -46,7 +84,7 @@ knitr::include_graphics("images/RegressionClassification.png")
 
 # Reduction of dimension
 
-Auto-encoders are used for the reduction of dimension of (large) datasets. 
+**Auto-encoders** are used for the reduction of dimension of (large) datasets. 
 
 <br> 
 - Let $X$ be our dataset: $\mathbf{X}=(X_i)_{i \in 1, \dots,N_{obs}}$
@@ -71,12 +109,17 @@ Auto-encoders are used for the reduction of dimension of (large) datasets.
 knitr::include_graphics("images/Autoencoder.png")
 ```
 
+---
+class: center, middle
+
+**Neural networks**
+
 
 
 ---
 
 
-# About $f$, $d$ and $e$ : neural networks
+# About $f$: neural networks
 
 ```{r, echo=FALSE, out.width="90%", fig.cap="Neural network architecture.",fig.align="center"}
 knitr::include_graphics("images/NeuralNetwork.png")
@@ -85,7 +128,7 @@ knitr::include_graphics("images/NeuralNetwork.png")
 
 ---
 
-# About $f$, $d$ and $e$ : neural networks
+# About   $d$ and $e$ : neural networks
 
 ```{r, echo=FALSE, out.width="90%", fig.cap="Autoencoder scheme.",fig.align="center"}
 knitr::include_graphics("images/Autoencoder2.png")
@@ -204,6 +247,11 @@ $$
 
 [Lien vers une démonstration propre](http://www.xavierdupre.fr/app/mlstatpy/helpsphinx/c_ml/rn/rn_9_auto.html)
 
+---
+class: center, middle
+
+**Variational versions**
+
 
 ---
 
@@ -273,7 +321,33 @@ knitr::include_graphics("images/VarAutoencoder.png")
   **Very complex  too**
 
 
+---
 
+# Variational Bayesian inference
+
+- Approximate the posterior $p(\theta | Y)$ by $q(\theta)$ where $q\in \mathcal{R}$ 
+
+- $\mathcal{R}$ family of simpler  distributions. **Example**: $q(\cdot) = \mathcal{N}(\mu,\Sigma)$
+- Approximating  = Minimizing 
+$$ D_\text{KL}(q(\theta),p(\theta | \mathbf{Y})) = \mathbf{E}_q\left[\log \frac{q(\theta)}{p(\theta | \mathbf{Y})}\right]$$
+- Magic trick
+
+$$D_\text{KL}(q(\theta),p(\theta | \mathbf{Y}))  = \log \ell(\mathbf{Y}) - \left[ \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] -\mathbf{E}_q[\log q(\theta)]\right] $$ 
+  - $\log \ell(\mathbf{Y})$ independent of $q$ 
+  - Minimizing the KL is equivalent to  maximizing the ELBO
+    
+  $$\text{ELBO}(q) = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] -\mathbf{E}_q[\log q(\theta)]$$
+$$\text{ELBO}(q) = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)] -\mathbf{E}_q\left[\log \frac{q(\theta)}{\pi(\theta)}\right] = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)] - D_{\text{KL}}(q,\pi)$$
+---
+
+# In the case of a neural network
+
+- $\theta$ are the parameters (weights and bias)
+- Prior gaussian distribution on $\theta$ : $\theta \sim \mathcal{N}(0, \mathbb{I})$
+- If regression $$Y_i = f_\theta(X_i) + \epsilon_i, \quad \epsilon \sim \mathcal{N}(0,\sigma^2)$$
+
+$$\text{ELBO}(q) = \mathbb{E}_{q}  \left[\sum_{i=1}^{N_{obs}} - \frac{||X_i - f_{\theta}(X_i)||^2}{2\sigma^2}\right]$$ 
+  
 ---
 
 # Approximate the posterior distribution
