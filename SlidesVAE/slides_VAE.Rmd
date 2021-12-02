@@ -34,22 +34,43 @@ knitr::opts_chunk$set(echo = FALSE)
   
 
 ---
+
+class:  middle
 # Organisation  of the talk
 
 
-1. **Regression and classification, reduction of dimension**
 
-2. **Neural networks**
 
-3. **Variational neural networks**
+<font   color="orange"> 1. Regression and classification, reduction of dimension </font>
 
-4. **A few reminder on the optimization procedure**
+<br>
+
+<font  color="orange"> 2. Neural networks </font>
+
+<br>
+
+
+<font  color="orange"> 3. Variational neural networks </font>
+
+<br>
+
+<font  color="orange"> 4. A few reminder on the optimization procedure </font>
+
+
+
+
+
+
+
+ </font>
 
 
 ---
-class: center, middle
+class:  middle
 
-1. **Regression and classification, reduction of dimension**
+
+<font  size="6" color="orange">  1. Basics on regression/classification, reduction of dimension </font>
+
 
 ---
 
@@ -110,9 +131,9 @@ knitr::include_graphics("images/Autoencoder.png")
 ```
 
 ---
-class: center, middle
+class:   middle
 
-**Neural networks**
+ <font  size="6" color="orange">  2. Neural networks </font>
 
 
 
@@ -248,9 +269,11 @@ $$
 [Lien vers une démonstration propre](http://www.xavierdupre.fr/app/mlstatpy/helpsphinx/c_ml/rn/rn_9_auto.html)
 
 ---
-class: center, middle
+class: middle
 
-**Variational versions**
+<font  size="6" color="orange"> 3. Variational version </font>
+
+ 
 
 
 ---
@@ -321,32 +344,114 @@ knitr::include_graphics("images/VarAutoencoder.png")
   **Very complex  too**
 
 
+
+---
+class: middle
+
+<font  size="6" color="orange"> 3.1.  Bayesian inference for neural networks </font>
+
+
+
+
 ---
 
 # Variational Bayesian inference
 
-- Approximate the posterior $p(\theta | Y)$ by $q(\theta)$ where $q\in \mathcal{R}$ 
 
-- $\mathcal{R}$ family of simpler  distributions. **Example**: $q(\cdot) = \mathcal{N}(\mu,\Sigma)$
-- Approximating  = Minimizing 
+<br>
+
+- **Model** $\ell(\mathbf{Y} | \theta)$ 
+
+- **Prior** on $\theta$ : $\pi(\theta)$
+
+- **Approximate the posterior** $p(\theta | Y)$ by $q(\theta)$ where $q\in \mathcal{R}$  where  $\mathcal{R}$ family of simpler  distributions
+
+    - **Example**: $q(\cdot) = \mathcal{N}(\mu,\Sigma)$
+
+--
+
+<br>
+
+-  <font color="orange"> Approximating  = Minimizing the KL </font>
+
+
+$$\hat{q} = \arg\min_{q \in\mathcal{R}} D_\text{KL}(q(\theta),p(\theta | \mathbf{Y}))$$
+where 
 $$ D_\text{KL}(q(\theta),p(\theta | \mathbf{Y})) = \mathbf{E}_q\left[\log \frac{q(\theta)}{p(\theta | \mathbf{Y})}\right]$$
-- Magic trick
 
-$$D_\text{KL}(q(\theta),p(\theta | \mathbf{Y}))  = \log \ell(\mathbf{Y}) - \left[ \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] -\mathbf{E}_q[\log q(\theta)]\right] $$ 
-  - $\log \ell(\mathbf{Y})$ independent of $q$ 
-  - Minimizing the KL is equivalent to  maximizing the ELBO
-    
-  $$\text{ELBO}(q) = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] -\mathbf{E}_q[\log q(\theta)]$$
-$$\text{ELBO}(q) = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)] -\mathbf{E}_q\left[\log \frac{q(\theta)}{\pi(\theta)}\right] = \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)] - D_{\text{KL}}(q,\pi)$$
 ---
 
-# In the case of a neural network
+# The magic trick
+
+
+
+
+
+
+$$D_\text{KL}(q(\theta),p(\theta | \mathbf{Y}))  = \log \ell(\mathbf{Y}) - \left[\underbrace{\mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] -\mathbf{E}_q[\log q(\theta)]}_{\text{ELBO}}\right]$$ 
+
+ 
+
+  - $\log \ell(\mathbf{Y})$ independent of $q$ 
+
+<br>
+
+ - Minimizing the KL is equivalent to  minimizing the Cost Function
+
+
+\begin{eqnarray}
+\mathcal{F}(q) &=& -  \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)\pi(\theta)] + \mathbf{E}_q[\log q(\theta)] \\
+&=&  -  \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)] + \mathbf{E}_q\left[\log \frac{q(\theta)}{\pi(\theta)}\right] \\
+&=&D_{\text{KL}}(q,\pi) -  \mathbf{E}_q[\log \ell(\mathbf{Y}|\theta)]   
+\end{eqnarray}
+
+
+---
+
+#Parametrization of $q$ 
+
+Choose a parametric form in $q = q_{\eta}$. 
+  - **For example** : $q = \mathcal{N}(\mu,\Sigma)$ 
+
+
+$$\hat{\eta} = \arg\min_{\eta} \mathcal{F}(\eta) = \arg\min_{\eta} D_{\text{KL}}(q_{\eta},\pi) - \mathbf{E}_{q_{\eta}}[\log \ell(\mathbf{Y}|\theta)]$$
+
+  - Optimisation by gradient descent
+  
+  -  **BUT** expectation not explicit
+
+  
+---
+
+# Monte Carlo approximation
+
+  - With neural networks, $\mathbf{E}_{q_{\eta}}[\log \ell(\mathbf{Y}|\theta)]$  not explicit (activation functions non linear)
+  
+  - Approximation for Monte Carlo :  assume that $\theta^{(m)} \sim q_{\eta}$ 
+  
+$$\widehat{\mathcal{F}}(\eta) = \frac{1}{M}\sum_{m=1}^M  \log q_{\eta}(\theta ^{(m)}) - \log \pi(\theta^{(m)}) -  \log \ell(\mathbf{Y}|\theta^{(m)})$$
+  
+  - **Problem** we lost the explicit dependence in $\eta$ through the simulations  $\theta^{(m)}$ 
+  
+  - **Solution** : reparametrisation $\xi\sim \mathcal{N}(0,\mathbf{I})$, and $\phi = g(\xi,\eta)$
+
+$$\widehat{\mathcal{F}}(\eta) = \frac{1}{M}\sum_{m=1}^M   \log q_{\eta}(\phi(\xi^{(m)},\eta)) - \log \pi(\phi(\xi^{(m)},\eta)) - \log \ell(\mathbf{Y}| \phi(\xi^{(m)},\eta))$$
+ - **Remarks**
+ 
+  - $M=1$? 
+  - $D_{\text{KL}}(q_{\eta},\pi)$ may be explicit (for Gaussian distributions for instance) but not used in practice
+  - $\xi^{(m)}$ are resimulated each time we compute the gradients
+  
+---
+
+# More details for the regression case
 
 - $\theta$ are the parameters (weights and bias)
 - Prior gaussian distribution on $\theta$ : $\theta \sim \mathcal{N}(0, \mathbb{I})$
 - If regression $$Y_i = f_\theta(X_i) + \epsilon_i, \quad \epsilon \sim \mathcal{N}(0,\sigma^2)$$
 
-$$\text{ELBO}(q) = \mathbb{E}_{q}  \left[\sum_{i=1}^{N_{obs}} - \frac{||X_i - f_{\theta}(X_i)||^2}{2\sigma^2}\right]$$ 
+- 
+$$\left[\sum_{i=1}^{N_{obs}}   \frac{||Y_i - f_{ \phi(\xi^{(m)},\eta) }(X_i)||^2}{2\sigma^2}\right]$$ 
   
 ---
 
