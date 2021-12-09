@@ -3,9 +3,8 @@ title: "Tutoriel introductif aux autoencodeurs (variationnels)"
 author: "JA and SD, StateoftheR"
 date: "09/12/2021"
 output:
-html_document:
+  html_document:
     toc: true
-    toc_depth: 3
     theme: united
 ---
 
@@ -304,21 +303,8 @@ ae_1predict_or <- sapply(c(1:11), FUN = function(x) ae_1predict[, x] * sqrt(varc
 ## Autoencodeur variationnel
 
 ![Représentation schématique d'un autoencodeur variationnel](../SlidesVAE/images/varAutoencoderAll.png)
-
-```{r variational_autoencoder}
-# Parameters --------------------------------------------------------------
-batch_size <- 256
-latent_dim <- 12L # L spécifie que c'est un entier
-epochs_nb <- 50L
-epsilon_std <- 1.0
-```
-```{r }
-# Définition du modèle --------------------------------------------------------
-x <- layer_input(shape = c(input_size))
-z_mean <- layer_dense(x, latent_dim)
-z_log_var <- layer_dense(x, latent_dim)
-
-# Attention ecriture keras
+```{r autoencodeur-variationnel-fonctions-utiles}
+# Attention ecriture keras k_rendom_normal, k_shape etc.
 sampling <- function(arg) {
   z_mean <- arg[, 1:(latent_dim)]
   z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
@@ -331,12 +317,31 @@ sampling <- function(arg) {
 
   z_mean + k_exp(z_log_var / 2) * epsilon
 }
+# Fonction de perte
+vae_loss <- function(x, x_decoded) {
+  mse_loss <- k_sum(loss_mean_squared_error(x, x_decoded))
+  kl_loss <- -0.5 * k_sum(1 + z_log_var - k_square(z_mean) - k_exp(z_log_var))
+  mse_loss + kl_loss
+}
+```
+
+```{r autoencodeur-variationnel}
+# Parameters --------------------------------------------------------------
+batch_size <- 256
+latent_dim <- 12L # L spécifie que c'est un entier
+epochs_nb <- 50L
+epsilon_std <- 1.0
+
+# Définition du modèle --------------------------------------------------------
+x <- layer_input(shape = c(input_size))
+z_mean <- layer_dense(x, latent_dim)
+z_log_var <- layer_dense(x, latent_dim)
 
 # note that "output_shape" isn't necessary with the TensorFlow backend
 z <- layer_concatenate(list(z_mean, z_log_var)) %>%
   layer_lambda(sampling)
 
-# we instantiate these layers separately so as to reuse them later
+# On instancie les couches séparément pour pouvoir les réutiliser plus tard
 decoder <- layer_dense(units = input_size, activation = "sigmoid")
 x_decoded <- decoder(z)
 
@@ -351,16 +356,9 @@ decoder_input <- layer_input(shape = latent_dim)
 x_decoded_2 <- decoder(decoder_input)
 generator <- keras_model(decoder_input, x_decoded_2)
 
-vae_loss <- function(x, x_decoded) {
-  mse_loss <- k_sum(loss_mean_squared_error(x, x_decoded))
-  kl_loss <- -0.5 * k_sum(1 + z_log_var - k_square(z_mean) - k_exp(z_log_var))
-  mse_loss + kl_loss
-}
-
 vae %>% compile(optimizer = "sgd", loss = vae_loss) # rmsprop
 
 vae %>% fit(x = scaled_train, y = scaled_train, epochs = epochs_nb)
-
 
 x_train_encoded <- predict(encoder, scaled_train, batch_size = batch_size)
 ## Representation dans espace latent
