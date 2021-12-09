@@ -20,7 +20,7 @@ K <- keras::backend()
 
 ## Introduction : l'apprentissage profond en pratique
 
-Il existe deux grands "bibliothèques logicielles" pour faire de l'apprentissage profond (deep learning).
+Il existe deux grandes "bibliothèques logicielles" pour faire de l'apprentissage profond (deep learning).
 
 1.  [Pytorch](https://pytorch.org/) est une "bibliothèque logicielle" écrite en C++, Python et C, basée sur Torch, développée par les équipes d'intelligence artificielle (IA) de Facebook, déposée en open source sur GitHub en 2017. Selon les blogs, *Pytorch* est réputé être plutôt pour les développeurs orientés recherche, plus convivial, plus facile à adapter et debugger.
 
@@ -44,7 +44,7 @@ L'interface **Keras** a été portée sous R par JJ. Allaire, et évolue avec la
 
 ### Objectif du tuto
 
-Comprendre les commandes permettant de construire et entraîner un autoencodeur (variationnel) avec le package keras, depuis RStudio.
+**Comprendre les commandes permettant de construire et entraîner un autoencodeur (variationnel) avec le package keras, depuis RStudio**.
 
 Quelques ateliers passés autour de l'apprentissage profond :
 
@@ -52,11 +52,37 @@ Quelques ateliers passés autour de l'apprentissage profond :
 
 -   Un autre plus récent a été proposé, avec code Python (pytorch ou keras), par Charles Ollion sur l'apprentissage profond bayésien (<https://stateofther.netlify.app/post/bayesian-deep-learning/>)
 
+## Pré-requis et installation
+
+Pour installer tensorflow et keras et travailler depuis RStudio, suivre les consignes d'installation disponibles [ici](https://tensorflow.rstudio.com/installation/).
+
+Sous Ubuntu, on est un peu pris par la main. Installer le package **keras**.  
+Si pas de TensorFlow. Il suffira de lancer la fonction `tensorflow::install_tensorflow()` mais là encore, vous devriez avoir un message explicite. Si besoin on vous proposera d'installer Miniconda.
+
+
+Pour vérifier son installation tensorflow
+
+```{r, eval = FALSE}
+library(tensorflow)
+tf$constant("Hellow Tensorflow")
+```
+Possiblement on verra apparaître des messages d'erreur qui en fait ne conernent que les calculs sur GPU. Si vous n'avez pas de carte GPU ou ne souhaitez pas faire de calculs sur GPU vous pouvez ignorer les messages. 
+
+Si on veut pouvoir utiliser les fonctionnalités GPU, on peut avoir besoin d'installation supplémentaire.
+
+Remarque : pour avoir des infos sur sa carte graphique sous Ubuntu, taper `lspci | egrep "3D|VGA"` dans une console.
+
+
+
 ## Recette keras
 
-Dans keras on assemble des couches pour construire un modèle (mode de construction le plus courant est le mode séquentiel).
+Pour définir le modèle puis l'ajuster, on utilisera toujours les étapes suivantes. 
 
-1.  Construction du modèle (configuration des couches)
+
+### 1.  Construction du modèle (configuration des couches)
+
+Dans **keras** on assemble des couches pour **construire un modèle** (mode de construction le plus courant est le mode séquentiel).
+
 
 `layer_input(shape = NULL)`
 
@@ -64,11 +90,11 @@ Dans keras on assemble des couches pour construire un modèle (mode de construct
 
 Outre la fonction d'activation à spécifier, les schémas d'initialisation des poids (`kernel_initializer`) ou de régularisation des poids (`kernel_regularizer`) peuvent être importants.
 
-2.  Processus d'apprentissage
+### 2.  Processus d'apprentissage
 
 <!-- -->
 
-a.  Configuration (methode compile)
+#### a.  Configuration (methode compile)
 
 `compile(loss='mean_squared_error', optimizer='sgd')`
 
@@ -82,11 +108,10 @@ Ex : pour de la classification
 
 `optimizer = 'adam', loss = 'categorical_crossentropy', metrics = list('accuracy')`
 
-Ex: pour de la regression
 
-b.  Préparer les donnees d'apprentissage
+#### b.  Préparer les donnees d'apprentissage
 
-c.  Apprentissage (`fit`)
+#### c.  Apprentissage (`fit`)
 
 `fit(object, x = NULL, y = NULL, bath_size = NULL, epochs = 10)`
 
@@ -96,24 +121,8 @@ Trois arguments principaux:
 
 -   `batch_size`: le modèle découpe les données en lots plus petits et itèrent sur chaque lote pendant l'entrainement. *Attention si le nombre total d'échantillons n'est pas divisible par la taille du lot, le dernier batch doit être le plus petit.*
 
-3.  Evaluer et prédire
+### 3.  Evaluer et prédire
 
-## Pré-requis et installation
-
-Pour installer tensorflow et keras et travailler depuis RStudio, suivre les consignes d'installation disponibles [ici](https://tensorflow.rstudio.com/installation/).
-
-Sous Ubuntu, on est un peu pris par la main. Installer le package **keras**. Si besoin on vous proposera d'installer Miniconda. Si pas de TensorFlow. Il suffira de lancer la fonction `tensorflow::install_tensorflow()` mais là encore, vous devriez avoir un message explicite.
-
-Pour vérifier son installation tensorflow
-
-```{r, eval = FALSE}
-library(tensorflow)
-tf$constant("Hellow Tensorflow")
-```
-
-Si on veut pouvoir utiliser les fonctionnalités GPU, on peut avoir besoin d'installation supplémentaire.
-
-Remarque : pour avoir des infos sur sa carte graphique sous Ubuntu, taper `lspci | egrep "3D|VGA"` dans une console.
 
 ## Réduction de dimension
 
@@ -248,10 +257,10 @@ Définition du modèle
 ```{r autoencoder-1}
 # Ecriture condensée
 input_size = 11
-k <- 6 # nb de composantes
+m <- 6 # nb de composantes
 ae_1 <- keras_model_sequential()
 ae_1 %>% 
-  layer_dense(units = k, input_shape = input_size, use_bias = TRUE, activation = "linear") %>%
+  layer_dense(units = m, input_shape = input_size, use_bias = TRUE, activation = "linear") %>%
   layer_dense(units = input_size, use_bias = TRUE, activation = "linear") %>%
 summary(ae_1)
 ```
@@ -261,10 +270,10 @@ summary(ae_1)
 # Encodeur
 enc_input = layer_input(shape = input_size)
 enc_output = enc_input %>% 
-  layer_dense(units= k, activation = "linear") 
+  layer_dense(units= m, activation = "linear") 
 encoder = keras_model(enc_input, enc_output)
 # Decodeur
-dec_input = layer_input(shape = k)
+dec_input = layer_input(shape = m)
 dec_output = dec_input %>% 
   layer_dense(units= input_size, activation = "linear") 
 decoder = keras_model(dec_input, dec_output)
@@ -278,14 +287,15 @@ summary(ae_2)
 ```
 
 ```{r}
-# Couche encodeur : k*p poids + k terme de biais 
-# Couche décodeur : p*k + p termes de biais 
+# Couche encodeur : m*n poids + m terme de biais 
+# Couche décodeur : m*n + n termes de biais 
 get_config(ae_1)
 ```
 
-### On compile le modele en ajoutant fonction de perte et optimiseur
+### On compile le modèle en ajoutant fonction de perte et optimiseur
 
-Attention des modifications de valeurs de paramètres peuvent avoir des impacts importants. Exemple du taux d'apprentissage. A ce propos, cet argument a été renommé de `lr` en `learning_rate` (pas encore à jour sur le site de RStudio))
+Attention des modifications de valeurs de paramètres peuvent avoir des impacts importants. Exemple du taux d'apprentissage. A ce propos, cet argument a été renommé de `lr` en `learning_rate` (pas encore à jour sur le site de RStudio)). Le Learning rate est noté $\rho$ dans nos  slides de cours.
+
 
 ```{r ae-1-compile}
 ae_1 %>% compile(loss='mean_squared_error',
@@ -293,7 +303,7 @@ ae_1 %>% compile(loss='mean_squared_error',
                    )
 ```
 
-### On ajuste le modele aux donnees preparees (rq : besoin de les standardiser au prealable)
+### On ajuste le modèle aux données préparées (rq : besoin de les standardiser au préalable)
 
 Penser à standardiser les données au préalable et à les mettre sous forme de matrice et non de dataframe. Les messages d'erreur sont parfois un peu obscure.
 
@@ -331,11 +341,11 @@ w_decodeur%*%t(w_decodeur)
 
 ```{r}
 # Unit Norm: the weights on a layer have unit norm.
-sum(w_decodeur^2)/k
-sum(res.pca$svd$vs^2)/length(res.pca$svd$vs)
+sum(w_decodeur^2)/m
+#sum(res.pca$svd$vs^2)/length(res.pca$svd$vs)
 ```
 
-```{r ae1-predict}
+```{r ae1-predict, eval = FALSE}
 ae_1predict <- ae_1 %>% predict(scaled_train[,-12])
 # Repasser en non standardisé pour comparer...
 varcol <- apply(scaled_train[,-12], 2, var)
@@ -351,21 +361,26 @@ ae_1predict_or <-  sapply(c(1:11), FUN = function(x) ae_1predict[,x]*sqrt(varcol
 # Parameters --------------------------------------------------------------
 
 batch_size <- 256
-original_dim <- input_size
-latent_dim <- 2L
-intermediate_dim <- 6
+latent_dim <- 12L # L spécifie que c'est un entier
+# latent dim  = moyenne variance
+#intermediate_dim <- 6
 epochs_nb <- 50L
 epsilon_std <- 1.0
+```
+
+
+
+# Model definition --------------------------------------------------------
+```{r }
 
 # Model definition --------------------------------------------------------
 
-# Model definition --------------------------------------------------------
+x <- layer_input(shape = c(input_size))
+#h <- layer_dense(x, intermediate_dim, activation = "relu")
+z_mean <- layer_dense(x, latent_dim)
+z_log_var <- layer_dense(x, latent_dim)
 
-x <- layer_input(shape = c(original_dim))
-h <- layer_dense(x, intermediate_dim, activation = "relu")
-z_mean <- layer_dense(h, latent_dim)
-z_log_var <- layer_dense(h, latent_dim)
-
+# Attention ecriture keras
 sampling <- function(arg){
   z_mean <- arg[, 1:(latent_dim)]
   z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
@@ -384,40 +399,37 @@ z <- layer_concatenate(list(z_mean, z_log_var)) %>%
   layer_lambda(sampling)
 
 # we instantiate these layers separately so as to reuse them later
-decoder_h <- layer_dense(units = intermediate_dim, activation = "relu")
-decoder_mean <- layer_dense(units = original_dim, activation = "sigmoid")
-h_decoded <- decoder_h(z)
-x_decoded_mean <- decoder_mean(h_decoded)
+#decoder_h <- layer_dense(units = intermediate_dim, activation = "relu")
+decoder <- layer_dense(units = input_size, activation = "sigmoid")
+#h_decoded <- decoder_h(z)
+x_decoded <- decoder(z)
 
 # end-to-end autoencoder
-vae <- keras_model(x, x_decoded_mean)
+vae <- keras_model(x, x_decoded)
+
 
 # encoder, from inputs to latent space
 encoder <- keras_model(x, z_mean)
 
 # generator, from latent space to reconstructed inputs
 decoder_input <- layer_input(shape = latent_dim)
-h_decoded_2 <- decoder_h(decoder_input)
-x_decoded_mean_2 <- decoder_mean(h_decoded_2)
-generator <- keras_model(decoder_input, x_decoded_mean_2)
+#h_decoded_2 <- decoder_h(decoder_input)
+x_decoded_2<- decoder(decoder_input)
+generator <- keras_model(decoder_input, x_decoded_2)
 
-
-vae_loss <- function(x, x_decoded_mean){
+vae_loss <- function(x, x_decoded){
   #xent_loss <- (original_dim/1.0)*loss_binary_crossentropy(x, x_decoded_mean)
-  mse_loss <- k_sum(loss_mean_squared_error(x, x_decoded_mean))
-  kl_loss <- -0.5*k_mean(1 + z_log_var - k_square(z_mean) - k_exp(z_log_var), axis = -1L)
+  mse_loss <- k_sum(loss_mean_squared_error(x, x_decoded))
+  kl_loss <- -0.5*k_sum(1 + z_log_var - k_square(z_mean) - k_exp(z_log_var))
      #xent_loss + kl_loss
   mse_loss + kl_loss
 }
 
 vae %>% compile(optimizer = "sgd", loss = vae_loss) # rmsprop
-```
 
-```{r}
 vae %>%  fit(x = scaled_train, y = scaled_train, epochs = epochs_nb)
-```
 
-```{r}
+
 x_test_encoded <- predict(encoder, scaled_train, batch_size = batch_size)
 ## Representation dans espace latent
 x_test_encoded %>%
@@ -428,7 +440,6 @@ x_test_encoded %>%
 factoextra::fviz_pca_ind(res.pca, col.ind = factor(wine$quality))
 ```
 
-Attention ça ne fonctionne pas toujours et c'est un peu mystérieux.
 
 ## Bonus : pour obtenir des résultats plus cohérents entre ACP et autoencodeur linéaire monocouche
 
