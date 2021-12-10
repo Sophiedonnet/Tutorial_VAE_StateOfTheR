@@ -16,6 +16,8 @@ library(dplyr)
 library(corrplot) # pour représenter la matrice des corrélations empiriques
 library(factoextra) # pour avoir des représentations graphiques pour l'ACP
 library(tensorflow)
+#library(reticulate)
+# use_miniconda("r-reticulate")
 if (tensorflow::tf$executing_eagerly()) {
   tensorflow::tf$compat$v1$disable_eager_execution()
 }
@@ -133,6 +135,8 @@ Nous considérerons le jeu de données "vin rouge" de la base de données de vin
 
 ```{r loading-the-data}
 wine <- read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv", sep = ";")
+#quality <- wine$quality<6
+#wine2 <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data", sep = ",")
 # Taille du jeux de données
 dim(wine)
 # Aperçu des premières lignes
@@ -188,6 +192,12 @@ res.pca <- prcomp(scaled_data)
 head(res.pca$x)
 ## plot of the eigenvalues
 factoextra::fviz_eig(res.pca)
+# Plot -2D
+ggplot(as.data.frame(res.pca$x), aes(x = PC1, y = PC2, col = wine$quality)) + geom_point()
+# Plot - 3D
+#library(plotly)
+#pca_plotly <- plot_ly(as.data.frame(res.pca$x), x = ~PC1, y = ~PC2, z = ~PC3, color = ~wine$quality) %>% add_markers()
+#pca_plotly
 ```
 
 On peut effectuer une classification supervisée en utilisant la variable qualité pour vérifier que la qualité de prédiction ne diminue que très peu quand on passe des données complètes aux six premières composantes de l'ACP.
@@ -221,7 +231,7 @@ input_size <- 11
 m <- 6 # nb de composantes
 ae_1 <- keras_model_sequential()
 ae_1 %>%
-  layer_dense(units = m, input_shape = input_size, use_bias = TRUE, activation = "linear") %>%
+  layer_dense(units = m, input_shape = input_size, use_bias = TRUE, activation = "linear", name = "bottleneck") %>%
   layer_dense(units = input_size, use_bias = TRUE, activation = "linear") %>%
   summary(ae_1)
 ```
@@ -255,7 +265,7 @@ On peut récupérer la configuration du modèle à l'aide de la fonction `get_co
 get_config(ae_1)
 ```
 
-### 2.a Processus d'apprentissage : compilation
+#### 2.a Processus d'apprentissage : compilation
 
 On compile le modèle en ajoutant fonction de perte et optimiseur
 
@@ -269,15 +279,22 @@ ae_1 %>% compile(
 )
 ```
 
-### 2.b Ajustement du modèle aux données préparées
+#### 2.b Ajustement du modèle aux données préparées
 
 Attention : penser à standardiser les données au préalable et à les mettre sous forme de matrice et non de dataframe. Les messages d'erreur si on oublie de passer en matrice sont parfois un peu obscures.
 
 ```{r ae-1-fit}
-epochs_nb <- 50L
+epochs_nb <- 50L # L spécifie que c'est un entier
+batch_size <- 10L
 scaled_train <- as.matrix(scaled_data)
-ae_1 %>% fit(x = scaled_train, y = scaled_train, epochs = epochs_nb)
+ae_1 %>% fit(x = scaled_train, y = scaled_train, epochs = epochs_nb, batch_size = batch_size)
+# evaluate the performance of the model
+mse.ae <- evaluate(ae_1, scaled_train, scaled_train)
+mse.ae
 ```
+Si on ne précise pas la taille ds "batchs", elle est fixée à 32. epochs est à 10 par défaut. On peut utiliser l'argument verbose = 0 pour ne plus avoir l'addiche des résultats par epoch.
+
+On peut s'amuser à changer le nombre d'epoch, la taille des batchs et regarder ce que ça change.
 
 On peut remarques qu'il n'y a aucune contrainte sur les poids "décodeurs" et les poids "encodeurs".
 
@@ -300,9 +317,58 @@ meancol <- colMeans(wine[, -12])
 ae_1predict_or <- sapply(c(1:11), FUN = function(x) ae_1predict[, x] * sqrt(varcol[x]) + meancol[x])
 ```
 
+```{r botteleneck-layer}
+# extract the bottleneck layer
+intermediate_layer_model <- keras_model(inputs = ae_1$input, outputs = get_layer(ae_1, "bottleneck")$output)
+intermediate_output <- predict(intermediate_layer_model, scaled_train)
+ggplot(data.frame(PC1 = intermediate_output[,1], PC2 = intermediate_output[,2]), aes(x = PC1, y = PC2, col = wine$quality)) + geom_point()
+```
+
+### Comparaison des performances de l'ACP et de l'autoencodeur
+
+```{r comparaison}
+# PCA reconstruction
+pca.recon <- function(pca, x, k){
+  mu <- matrix(rep(res.pca$center, nrow(pca$x)), nrow = nrow(res.pca$x), byrow = T)
+  recon <- res.pca$x[,1:k] %*% t(res.pca$rotation[,1:k]) + mu
+  mse <- mean((recon - x)^2)
+  return(list(x = recon, mse = mse))
+}
+xhat <- rep(NA, 10)
+for(k in 1:10){
+  xhat[k] <- pca.recon(res.pca, scaled_train, k)$mse
+}
+ae.mse <- rep(NA, 5)
+input_size <- 11
+#m <- 6 # nb de composantes
+for(k in 1:10){
+  modelk <- keras_model_sequential()
+  modelk %>%
+  layer_dense(units = k, input_shape = input_size, use_bias = TRUE, activation = "linear", name = "bottleneck") %>%
+  layer_dense(units = input_size, use_bias = TRUE, activation = "linear")
+  modelk %>% compile(
+    loss = "mean_squared_error", 
+    optimizer = optimizer_sgd(learning_rate = 0.1)
+  )
+  modelk %>% fit(
+    x = scaled_train, 
+    y = scaled_train, 
+    epochs = 50,
+    verbose = 0,
+  )
+  ae.mse[k] <- unname(evaluate(modelk, scaled_train, scaled_train))
+}
+df <- data.frame(k = c(1:10, 1:10), mse = c(xhat, ae.mse), method = c(rep("acp", 10), rep("autoencodeur", 10)))
+ggplot(df, aes(x = k, y = mse, col = method)) + geom_line()
+```
+
+
+
 ## Autoencodeur variationnel
 
 ![Représentation schématique d'un autoencodeur variationnel](../SlidesVAE/images/varAutoencoderAll.png)
+Pour construire un auto-encodeur variationnel, on effectuera deux modifications principales : une portant sur la couche intermédiaire de dimension réduite, et une sur la fonction de perte à minimiser.
+
 ```{r autoencodeur-variationnel-fonctions-utiles}
 # Attention ecriture keras k_rendom_normal, k_shape etc.
 sampling <- function(arg) {
@@ -327,8 +393,8 @@ vae_loss <- function(x, x_decoded) {
 
 ```{r autoencodeur-variationnel}
 # Parameters --------------------------------------------------------------
-batch_size <- 256
-latent_dim <- 12L # L spécifie que c'est un entier
+batch_size <- 32
+latent_dim <- 6L # L spécifie que c'est un entier
 epochs_nb <- 50L
 epsilon_std <- 1.0
 
@@ -367,8 +433,7 @@ x_train_encoded %>%
   mutate(class = as.factor(wine$quality)) %>%
   ggplot(aes(x = V1, y = V2, colour = class)) +
   geom_point()
-## Representation pca
-factoextra::fviz_pca_ind(res.pca, col.ind = factor(wine$quality))
+
 ```
 
 ## Bonus : pour obtenir des résultats plus cohérents entre ACP et autoencodeur linéaire monocouche
