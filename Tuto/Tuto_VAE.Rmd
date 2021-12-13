@@ -164,7 +164,7 @@ scaled_data <- wine[, -12] %>%
 Ici, nous ne nous servirons pas de jeux de tests et d'entrainement. Exemple de code ci-dessous si on avait voulu en créer un pour prédire la qualité du vin. 
 
 ```{r train-and-test-datasets, echo = TRUE, eval = FALSE}
-set.seed(seed = 1616)
+set.seed(seed = 123)
 dataset_size <- nrow(wine)
 train_size <- as.integer(dataset_size * 0.85)
 # Training dataset
@@ -193,7 +193,7 @@ head(res.pca$x)
 ## plot of the eigenvalues
 factoextra::fviz_eig(res.pca)
 # Plot -2D
-ggplot(as.data.frame(res.pca$x), aes(x = PC1, y = PC2, col = wine$quality)) + geom_point()
+ggplot(as.data.frame(res.pca$x), aes(x = PC1, y = PC2, col =wine$quality)) + geom_point()
 # Plot - 3D
 #library(plotly)
 #pca_plotly <- plot_ly(as.data.frame(res.pca$x), x = ~PC1, y = ~PC2, z = ~PC3, color = ~wine$quality) %>% add_markers()
@@ -367,7 +367,7 @@ ggplot(df, aes(x = k, y = mse, col = method)) + geom_line()
 ## Autoencodeur variationnel
 
 ![Représentation schématique d'un autoencodeur variationnel](../SlidesVAE/images/varAutoencoderAll.png)
-Pour construire un auto-encodeur variationnel, on effectuera deux modifications principales : une portant sur la couche intermédiaire de dimension réduite, et une sur la fonction de perte à minimiser.
+Pour construire un auto-encodeur variationnel, on effectuera deux modifications principales : une portant sur la couche intermédiaire de dimension réduite, et une sur la fonction de perte à minimiser. Vous pouvez modifier les poids $k_1$ et $k_2$ de deux composantes de la fonction de perte.
 
 ```{r autoencodeur-variationnel-fonctions-utiles}
 # Attention ecriture keras k_rendom_normal, k_shape etc.
@@ -384,14 +384,15 @@ sampling <- function(arg) {
   z_mean + k_exp(z_log_var / 2) * epsilon
 }
 # Fonction de perte
-vae_loss <- function(x, x_decoded) {
+vae_loss <- function(x, x_decoded, k1 = 1, k2 = 0.01) {
   mse_loss <- k_sum(loss_mean_squared_error(x, x_decoded))
   kl_loss <- -0.5 * k_sum(1 + z_log_var - k_square(z_mean) - k_exp(z_log_var))
-  mse_loss + kl_loss
+  k1*mse_loss + k2*kl_loss
 }
 ```
 
 ```{r autoencodeur-variationnel}
+set.seed(123)
 # Parameters --------------------------------------------------------------
 batch_size <- 32
 latent_dim <- 6L # L spécifie que c'est un entier
@@ -429,11 +430,9 @@ vae %>% fit(x = scaled_train, y = scaled_train, epochs = epochs_nb)
 x_train_encoded <- predict(encoder, scaled_train, batch_size = batch_size)
 ## Representation dans espace latent
 x_train_encoded %>%
-  as_tibble() %>%
-  mutate(class = as.factor(wine$quality)) %>%
-  ggplot(aes(x = V1, y = V2, colour = class)) +
+  as_tibble()  %>%
+  ggplot(aes(x = V1, y = V2, colour = wine$quality)) +
   geom_point()
-
 ```
 
 ## Bonus : pour obtenir des résultats plus cohérents entre ACP et autoencodeur linéaire monocouche
