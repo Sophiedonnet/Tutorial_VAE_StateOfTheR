@@ -253,7 +253,7 @@ pdfproducer = {INRAE}%
 
 \begin{frame}{Reduction of dimension}
 
-\textbf{Auto-encoders} are used for the reduction of dimension of
+\textbf{Autoencoders} are used for the reduction of dimension of
 (large) datasets.
 
 Let \(X\) be our dataset:
@@ -440,7 +440,7 @@ reminder of the principle
 \protect\hypertarget{pca-versus-autoencoder-1}{}
 \begin{itemize}
 \item
-  \(W' = e\) \textbf{linear} encoder function
+  \(W' = e\) : \textbf{linear} encoder function
 \item
   \(W = d\) : \textbf{linear} decoder function
 \item
@@ -631,7 +631,7 @@ procedure to compute the derivatives : \texttt{Tensorflow}
 
 
 %#######################################
-\section{Varational versions of neural networks}
+\section{Variational versions of neural networks}
 
 \subsection{Motivations}
 
@@ -696,7 +696,7 @@ procedure to compute the derivatives : \texttt{Tensorflow}
 \protect\hypertarget{probabilistic-version-of-the-autoencoder}{}
 \begin{itemize}
 \item
-  \textbf{Idea} : put a probabilistic distribution on the latent space et
+  \textbf{Idea} : put a probabilistic distribution on the latent space and
   estimate the posterior distribution.
 \item
   \textbf{A statistical model with latent variables}
@@ -750,7 +750,7 @@ $$D_\text{KL}(q(\theta),p(\theta | \mathbf{Y}))  = \log \ell(\mathbf{Y}) + \left
 
 \begin{itemize}
  \item \(\log \ell(\mathbf{Y})\) independent of \(q\)
-\item   Minimizing the KL  w.r. to $q$ is
+\item   Minimizing the Kullback–Leibler divergence  w.r. to $q$ is
 equivalent to minimizing $\mathcal{F}(q)$ with respect to $q$
 
 \end{itemize}
@@ -847,7 +847,7 @@ No explicit form, linked ot the fact that $p(\mathbf{Z}  | \mathbf{X};d_{\theta}
   
 \end{frame}
 
-\begin{frame}{The ELBO}
+\begin{frame}{The Evidence Lower BOund (ELBO)}
 
 \begin{itemize}
 
@@ -905,7 +905,7 @@ About $g$ and $H$ : called the "encoder part"
 \begin{itemize}
 \item    $H(X)$ is a covariance so
 \begin{itemize}
-\item  it should be a square symetric matrix
+\item  it should be a square symmetric matrix
 \item  \textbf{Simplification}: diagonal matrix $H(\mathbf{X}) = diag(h^2(X))$ where  $h(X) \in \mathbb{R}^m$
 \end{itemize}
 \item
