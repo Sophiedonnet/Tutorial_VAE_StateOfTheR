@@ -7,7 +7,7 @@ About $g$ and $H$ : called the "encoder part"
 \begin{itemize}
 \item    $H(X)$ is a covariance so
 \begin{itemize}
-\item  it should be a square symetric matrix
+\item  it should be a square symmetric matrix
 \item  \textbf{Simplification}: diagonal matrix $H(\mathbf{X}) = diag(h^2(X))$ where  $h(X) \in \mathbb{R}^m$
 \end{itemize}
 \item

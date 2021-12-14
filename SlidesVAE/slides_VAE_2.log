@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.9.30)  7 DEC 2021 16:29
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.9.30)  14 DEC 2021 11:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1638,7 +1638,7 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 960.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 960.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 960.
 Package rerunfilecheck Info: File `slides_VAE_2.out' has not changed.
-(rerunfilecheck)             Checksum: FE82A6FC45EB3B18777C5EF1E6492C74;695.
+(rerunfilecheck)             Checksum: 8455B2965C35790901EA7B10C60DFC3F;696.
  ) 
 Here is how much of TeX's memory you used:
  27644 strings out of 482504
@@ -1670,7 +1670,7 @@ hare/texmf/fonts/type1/public/lm/lmsy9.pfb></usr/share/texmf/fonts/type1/public
 /lm/lmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbo
 ls/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbol
 s/msbm7.pfb>
-Output written on slides_VAE_2.pdf (48 pages, 573601 bytes).
+Output written on slides_VAE_2.pdf (48 pages, 573745 bytes).
 PDF statistics:
  542 PDF objects out of 1000 (max. 8388607)
  425 compressed objects within 5 object streams
